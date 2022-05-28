@@ -20,11 +20,11 @@ struct Args {
 
 #[derive(Debug, Serialize, Deserialize, CandidType, Clone)]
 struct Block {
-    hash: Vec<u8>,
+    // hash: Vec<u8>,
     block: Vec<u8>,
-    parent_hash: Option<Vec<u8>>,
-    idx: i32,
-    verified: bool,
+    // parent_hash: Option<Vec<u8>>,
+    // idx: i32,
+    // verified: bool,
 }
 
 fn create_identity(seed_file_path: String) -> impl Identity {
@@ -38,40 +38,32 @@ fn create_identity(seed_file_path: String) -> impl Identity {
 }
 
 async fn send_blocks(
-    blocks: &[Block],
+    blocks: &[Vec<u8>],
     update_builder: &mut UpdateBuilder<'_>,
     waiter: &Delay,
 ) -> bool {
-    /// This code shouldn't work, because the structure of Blocks in sqlite is different from the ledger canister
-    
-    // let encoded_blocks: Vec<Vec<u8>> = blocks
-    //     .to_vec()
-    //     .iter()
-    //     .map(|block| block..unwrap())
-    //     .collect();
-
     let response = update_builder
         .with_arg(&Encode!(&blocks).unwrap())
         .call_and_wait(waiter.to_owned())
         .await
         .expect(format!("block upload failed").as_str());
-
     Decode!(response.as_slice(), ()).is_ok()
 }
 
-fn get_blocks(conn: &Connection) -> Result<Vec<Block>> {
+fn get_blocks(conn: &Connection) -> Result<Vec<Vec<u8>>> {
     let mut stmt = conn.prepare("SELECT * FROM blocks order by idx")?;
-    let blocks: Vec<Block> = stmt
+    let blocks: Vec<Vec<u8>> = stmt
         .query_map([], |row| {
-            Ok(Block {
-                hash: row.get(0)?,
-                block: row.get(1)?,
-                parent_hash: row.get(2)?,
-                idx: row.get(3)?,
-                verified: row.get(4)?,
-            })
+            // Ok(Block {
+            //     // hash: row.get(0)?,
+            //     block: row.get(1)?,
+            //     // parent_hash: row.get(2)?,
+            //     // idx: row.get(3)?,
+            //     // verified: row.get(4)?,
+            // })
+            Ok(row.get(1)?)
         })?
-        .collect::<Result<Vec<Block>>>()?;
+        .collect::<Result<Vec<Vec<u8>>>>()?;
     Ok(blocks)
 }
 
